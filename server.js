@@ -2,23 +2,16 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
+// Set a fixed 10-day countdown from server start
+const startTime = Date.now();
+const endTime = startTime + (10 * 24 * 60 * 60 * 1000); // 10 days
+
 // Global countdown state
-let countdownState = {
-    startTime: null,
-    endTime: null,
+const countdownState = {
+    startTime: startTime,
+    endTime: endTime,
     isComplete: false
 };
-
-// Initialize countdown on server start
-function initializeCountdown() {
-    if (!countdownState.startTime) {
-        countdownState.startTime = Date.now();
-        countdownState.endTime = countdownState.startTime + (30 * 1000); // 30 seconds
-        countdownState.isComplete = false;
-    }
-}
-
-initializeCountdown();
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '.')));
@@ -31,10 +24,6 @@ app.get('/', (req, res) => {
 
 // Add endpoint to get countdown state
 app.get('/countdown-state', (req, res) => {
-    const now = Date.now();
-    if (now >= countdownState.endTime && !countdownState.isComplete) {
-        countdownState.isComplete = true;
-    }
     res.json(countdownState);
 });
 
