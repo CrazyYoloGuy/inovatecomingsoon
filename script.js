@@ -77,14 +77,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error loading logo:', error);
     }
 
-    // Set countdown for exactly 10 days from now
-    const now = new Date();
-    const COUNTDOWN_END_DATE = new Date(now.getTime() + (10 * 24 * 60 * 60 * 1000)); // 10 days from now
-    const countdownState = {
-        startTime: now.getTime(),
-        endTime: COUNTDOWN_END_DATE.getTime(),
-        isComplete: false
-    };
+    // Get or set countdown state from localStorage
+    let countdownState;
+    const savedState = localStorage.getItem('countdownState');
+    
+    if (savedState) {
+        countdownState = JSON.parse(savedState);
+    } else {
+        // Set countdown for exactly 10 days from now
+        const now = new Date();
+        countdownState = {
+            startTime: now.getTime(),
+            endTime: now.getTime() + (10 * 24 * 60 * 60 * 1000), // 10 days
+            isComplete: false
+        };
+        // Save initial state
+        localStorage.setItem('countdownState', JSON.stringify(countdownState));
+    }
 
     // Modal functionality
     const modal = document.querySelector('.modal');
@@ -153,11 +162,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Check if countdown is complete
-        if (distance < 0) {
+        if (distance < 0 && !countdownState.isComplete) {
+            countdownState.isComplete = true;
+            localStorage.setItem('countdownState', JSON.stringify(countdownState));
             clearInterval(countdownInterval);
             showCompletionMessage();
             
-            // Optional: Notify if not already notified
+            // Notify if not already notified
             if (!localStorage.getItem('completionNotified')) {
                 showNotification('Countdown Complete!', 'The wait is over! Check out what\'s new.');
                 localStorage.setItem('completionNotified', 'true');
@@ -215,9 +226,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Start countdown
-    updateCountdown();
-    const countdownInterval = setInterval(updateCountdown, 1000);
+    // Check if countdown is already complete
+    if (countdownState.isComplete) {
+        showCompletionMessage();
+    } else {
+        // Start countdown
+        updateCountdown();
+        const countdownInterval = setInterval(updateCountdown, 1000);
+    }
 
     // Request notification permission on page load
     if ("Notification" in window && Notification.permission === "default") {
