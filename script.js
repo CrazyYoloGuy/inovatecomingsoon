@@ -77,13 +77,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error loading logo:', error);
     }
 
-    // Set countdown for exactly 10 days from now
-    const now = new Date();
-    const countdownState = {
-        startTime: now.getTime(),
-        endTime: now.getTime() + (10 * 24 * 60 * 60 * 1000), // 10 days
-        isComplete: false
-    };
+    // Fetch countdown state from server
+    let countdownState;
+    try {
+        const response = await fetch('/countdown-state');
+        countdownState = await response.json();
+    } catch (error) {
+        console.error('Error fetching countdown state:', error);
+        // Fallback to default state if fetch fails
+        const now = new Date();
+        countdownState = {
+            startTime: now.getTime(),
+            endTime: now.getTime() + (10 * 24 * 60 * 60 * 1000),
+            isComplete: false
+        };
+    }
 
     // Modal functionality
     const modal = document.querySelector('.modal');
